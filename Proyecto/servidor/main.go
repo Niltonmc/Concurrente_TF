@@ -34,10 +34,10 @@ var fileData [][]float32
 var dataframeKNN [][]float32
 var dataframeKMeans [][]float32
 
-var xDataTrain [][]float32
+var xDataTr [][]float32
 var xDataTrainKNN [][]float32
 
-var yDataTrain [][]float32
+var yDataTr [][]float32
 var yDataTrainKNN [][]float32
 
 var groupsSelected []informe
@@ -63,17 +63,13 @@ func calculateHash(block Block) string {
 }
 
 func generateBlock(oldBlock Block, data informe) (Block, error) {
-
 	var newBlock Block
-
 	t := time.Now()
-
 	newBlock.Index = oldBlock.Index + 1
 	newBlock.Timestamp = t.String()
 	newBlock.data = data
 	newBlock.PrevHash = oldBlock.Hash
 	newBlock.Hash = calculateHash(newBlock)
-
 	return newBlock, nil
 }
 
@@ -81,11 +77,9 @@ func isBlockValid(newBlock, oldBlock Block) bool {
 	if oldBlock.Index+1 != newBlock.Index {
 		return false
 	}
-
 	if oldBlock.Hash != newBlock.PrevHash {
 		return false
 	}
-
 	if calculateHash(newBlock) != newBlock.Hash {
 		return false
 	}
@@ -146,11 +140,8 @@ func readArchiveCSV(filePath string) ([]string, map[string]int, [][]float32) {
 	}
 
 	defer fileArchive.Close()
-
 	csvReader := csv.NewReader(fileArchive)
-
 	fileData, err := csvReader.ReadAll()
-
 	if err != nil {
 		log.Fatal("No se puede parsear el archivo de entrada "+filePath, err)
 	}
@@ -164,7 +155,6 @@ func readArchiveCSV(filePath string) ([]string, map[string]int, [][]float32) {
 	}
 
 	fileData = fileData[1:]
-
 	fileDataReal := make([][]float32, len(fileData))
 
 	for i := range fileDataReal {
@@ -210,26 +200,6 @@ func head(fileData [][]float32, n int) {
 	}
 }
 
-func normalizeData(fileData [][]float32) [][]float32 {
-	mins, maxs := make([]float32, len(fileData[0])), make([]float32, len(fileData[0]))
-	for i := 0; i < len(fileData[0]); i++ {
-		mins[i], maxs[i] = float32(math.MaxFloat32), float32(0)
-		for j := 0; j < len(fileData); j++ {
-			if fileData[j][i] < mins[i] {
-				mins[i] = fileData[j][i]
-			}
-			if fileData[j][i] > maxs[i] {
-				maxs[i] = fileData[j][i]
-			}
-		}
-		for j := 0; j < len(fileData); j++ {
-			fileData[j][i] = ((fileData[j][i] - mins[i]) / (maxs[i] - mins[i]))
-		}
-	}
-
-	return fileData
-}
-
 func standardizeData(fileData [][]float32) ([][]float32, []float64, []float64) {
 
 	newfileData := make([][]float32, len(fileData))
@@ -257,25 +227,18 @@ func standardizeData(fileData [][]float32) ([][]float32, []float64, []float64) {
 	return newfileData, mean, std
 }
 
-func classKNN(xDataTrain [][]float32, yDataTrain [][]float32, xTest []float32, k int, outCh chan []float32) {
-
+func classKNN(xDataTr [][]float32, yDataTr [][]float32, xTest []float32, k int, outCh chan []float32) {
 	distances := make([][]float32, k)
-
 	for i := 0; i < len(distances); i++ {
 		distances[i] = []float32{math.MaxFloat32, -1}
 	}
-
-	for i := 0; i < len(xDataTrain); i++ {
-
+	for i := 0; i < len(xDataTr); i++ {
 		addValue := float32(0)
-
-		for j := 0; j < len(xDataTrain[i]); j++ {
-			addValue += (xDataTrain[i][j] - xTest[j]) * (xDataTrain[i][j] - xTest[j])
+		for j := 0; j < len(xDataTr[i]); j++ {
+			addValue += (xDataTr[i][j] - xTest[j]) * (xDataTr[i][j] - xTest[j])
 		}
 		addValue = float32(math.Sqrt(float64(addValue)))
-
 		j := len(distances) - 1
-
 		for ; j >= 0; j-- {
 			if distances[j][0] <= addValue {
 				temp := make([][]float32, k+1)
@@ -283,7 +246,7 @@ func classKNN(xDataTrain [][]float32, yDataTrain [][]float32, xTest []float32, k
 					temp[m] = make([]float32, 2)
 					copy(temp[m], distances[m])
 				}
-				temp[j+1] = []float32{addValue, yDataTrain[i][0]}
+				temp[j+1] = []float32{addValue, yDataTr[i][0]}
 				for m := j + 1; m < k; m++ {
 					temp[m+1] = make([]float32, 2)
 					copy(temp[m+1], distances[m])
@@ -293,7 +256,7 @@ func classKNN(xDataTrain [][]float32, yDataTrain [][]float32, xTest []float32, k
 			} else {
 				if j == 0 {
 					temp := make([][]float32, k+1)
-					temp[0] = []float32{addValue, yDataTrain[i][0]}
+					temp[0] = []float32{addValue, yDataTr[i][0]}
 					for m := range distances {
 						temp[m+1] = make([]float32, 2)
 						copy(temp[m+1], distances[m])
@@ -303,32 +266,27 @@ func classKNN(xDataTrain [][]float32, yDataTrain [][]float32, xTest []float32, k
 			}
 		}
 	}
-
 	for _, dist := range distances {
 		outCh <- dist
 	}
 }
 
-func multiThreadKNN(xDataTrain [][]float32, yDataTrain [][]float32, xTest []float32, k int, routines int) (float32, map[float32]int) {
-
+func multiThreadKNN(xDataTr [][]float32, yDataTr [][]float32, xTest []float32, k int, chans int) (float32, map[float32]int) {
 	outCh := make(chan []float32)
-	xsize := len(xDataTrain) / routines
-
-	for i := 0; i < routines; i++ {
-		if i < routines-1 {
-			go classKNN(xDataTrain[i*xsize:(i+1)*xsize], yDataTrain[i*xsize:(i+1)*xsize], xTest, k, outCh)
+	xsize := len(xDataTr) / chans
+	for i := 0; i < chans; i++ {
+		if i < chans-1 {
+			go classKNN(xDataTr[i*xsize:(i+1)*xsize], yDataTr[i*xsize:(i+1)*xsize], xTest, k, outCh)
 		} else {
-			go classKNN(xDataTrain[i*xsize:], yDataTrain[i*xsize:], xTest, k, outCh)
+			go classKNN(xDataTr[i*xsize:], yDataTr[i*xsize:], xTest, k, outCh)
 		}
 	}
 
 	distances := make([][]float32, k)
-
 	for i := 0; i < len(distances); i++ {
 		distances[i] = []float32{math.MaxFloat32, -1}
 	}
-
-	for i := 0; i < k*routines; i++ {
+	for i := 0; i < k*chans; i++ {
 		j := len(distances) - 1
 		candidate := <-outCh
 		for ; j >= 0; j-- {
@@ -360,7 +318,6 @@ func multiThreadKNN(xDataTrain [][]float32, yDataTrain [][]float32, xTest []floa
 		}
 	}
 	close(outCh)
-
 	clases := make(map[float32]int)
 	for _, dist := range distances {
 		if dist[1] == -1 {
@@ -372,7 +329,6 @@ func multiThreadKNN(xDataTrain [][]float32, yDataTrain [][]float32, xTest []floa
 			clases[dist[1]]++
 		}
 	}
-
 	var res float32
 	max := -1
 	for key, val := range clases {
@@ -527,16 +483,6 @@ func classifyCovid(r http.ResponseWriter, request *http.Request) {
 	xTest := []float32{test.AgeGroup, test.Sex, test.CardiovascularDisease, test.Diabetes, test.RespiratoryDisease,
 		test.Hypertension, test.Cancer}
 
-	/*
-		fmt.Println("Age group: ", xTest[0])
-		fmt.Println("Sex: ", xTest[1])
-		fmt.Println("Cardiovascular Disease: ", xTest[2])
-		fmt.Println("Diabetes: ", xTest[3])
-		fmt.Println("Respiratory Disease: ", xTest[4])
-		fmt.Println("Hypertension: ", xTest[5])
-		fmt.Println("Cancer: ", xTest[6])
-	*/
-
 	dftemp := make([][]float32, len(xDataTrainKNN))
 	for i := range xDataTrainKNN {
 		dftemp[i] = make([]float32, len(xDataTrainKNN[i]))
@@ -611,31 +557,26 @@ func clusteringCovid(r http.ResponseWriter, request *http.Request) {
 	for _, val := range ocurs {
 		ncentroid = append(ncentroid, val)
 	}
-
 	for i := 0; i < k; i++ {
 		if !math.IsNaN(float64(centers[i][0])) {
 			for j := 0; j < len(centers[i]); j++ {
 				z := float64(centers[i][j])*stdScalesVal[j] + meanScalesVal[j]
 				centers[i][j] = float32(z)
 			}
-
 			groupsSelected = append(groupsSelected, informe{AgeGroup: centers[i][0], Sex: centers[i][1], CardiovascularDisease: centers[i][2],
 				Diabetes: centers[i][3], RespiratoryDisease: centers[i][4],
 				Hypertension: centers[i][5], Cancer: centers[i][6]})
 		}
 	}
-
-	fmt.Println("Los centroides seleccionados son: ")
+	fmt.Println("Centroides:")
 	fmt.Println(groupsSelected)
-	fmt.Println("La cantidad de pertenencia a los centroides es: ")
+	fmt.Println("Cantidad de pertenencia:")
 	fmt.Println(ncentroid)
-
 	kmeansResultVar = kmeansResponse{Centroids: groupsSelected, Ncentroid: ncentroid}
 
 }
 
 func kMeansResult(r http.ResponseWriter, request *http.Request) {
-
 	jsonResponse, err := json.Marshal(kmeansResultVar)
 	if err != nil {
 		http.Error(r, err.Error(), http.StatusBadRequest)
@@ -647,6 +588,7 @@ func kMeansResult(r http.ResponseWriter, request *http.Request) {
 
 func main() {
 
+	//Crear Blockchain
 	rand.Seed(time.Now().UTC().UnixNano())
 	genesisInforme := informe{3, 0, 1, 1, 0, 0, 1}
 	t := time.Now()
@@ -654,12 +596,12 @@ func main() {
 	spew.Dump(genesisBlock)
 	Blockchain = append(Blockchain, genesisBlock)
 
-	// LECTURA DE ARCHIVO PARA KNN
+	//KnnFile
 	columnsNamesKNN, columnsKNN, dataframeKNN = readArchiveCSV("muerteKNN.csv")
 	_, _, xDataTrainKNN = splitColumns(columnsNamesKNN, columnsKNN, dataframeKNN, columnsNamesKNN[:len(columnsNamesKNN)-1])
 	_, _, yDataTrainKNN = splitColumns(columnsNamesKNN, columnsKNN, dataframeKNN, []string{columnsNamesKNN[len(columnsNamesKNN)-1]})
 
-	// LECTURA DE ARCHIVO PARA KMEANS
+	//KMeansFile
 	columnsNamesKMeans, columnsKMeans, dataframeKMeans = readArchiveCSV("muerteKMeans.csv")
 
 	router := mux.NewRouter()
