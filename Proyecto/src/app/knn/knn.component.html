@@ -1,0 +1,29 @@
+
+<div class="container modaly" style="background: rgba(89, 107, 158, 0.2);">
+<form name="form" #f="ngForm" (ngSubmit)="createGroup()" novalidate class="home-form">
+    <h1 class="text-center" style="color: white; padding-top: 20px;">Seleccion de  Grupos de Riesgo</h1>
+
+   <!-- Numero de Clusters-->
+    <div class="form-group">
+        <label class="blanco" for="clusters">Numero de Clusters o centroides</label>
+        <input [(ngModel)]='newForm.clusters' #clusters="ngModel" [ngModelOptions]="{standalone: true}" type="number" min="1" class="form-control" id="clusters" aria-describedby="numberHelp" placeholder="Numero de Cluster o Centroides"> 
+    </div>
+    <!-- Maximo de Iteraciones -->
+    <div class="form-group">
+        <label class="blanco" for="iteraciones"> Maximo de Iteraciones </label>
+        <input [(ngModel)]='newForm.iteraciones' #iteraciones="ngModel" [ngModelOptions]="{standalone: true}" type="number" min="1" class="form-control" id="iteraciones" aria-describedby="numberHelp" placeholder="Maximo de Iteraciones">
+    </div>
+    <!-- Boton Enviar-->
+    <button type="submit" class="btn btn-primary btn-block">
+        <span>Enviar</span>
+    </button>
+</form>
+<div class="modaly" *ngIf="visible==true" style="color: white; background-color: rgba(152, 164, 231, 0.8); padding: 20px; margin-top: 20px;">
+        <div *ngFor="let item of centroids; let i=index;">
+            <p> Centroide {{i+1}} con {{quantity[i]}} registros</p>
+            <p>Edad: {{item.age_group}} años, Genero: {{genero[i]}}, Problemas: Cardiovasculares: {{cardiovascular[i]}}, Diabetis: {{diabetis[i]}}, Respiratorios: {{respiratorio[i]}}, Hipertencion: {{hypertencion[i]}},Cancer: {{cancer[i]}}</p>
+        </div>
+        
+</div> 
+</div>
+

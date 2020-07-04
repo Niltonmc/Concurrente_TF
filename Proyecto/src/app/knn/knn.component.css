@@ -1,0 +1,15 @@
+.blanco{
+    color: white;
+    font-size: 14pt;
+}
+
+.modaly{
+    max-width: 650px;
+    padding-top: 15px;
+    margin-top: 150px;
+    border-radius: 33px 33px 33px 33px;
+    -moz-border-radius: 33px 33px 33px 33px;
+    -webkit-border-radius: 33px 33px 33px 33px;
+    border: 0px solid #000000;
+    padding-bottom: 20px;
+}

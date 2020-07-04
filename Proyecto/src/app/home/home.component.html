@@ -1,0 +1,57 @@
+<h1 class="text-center" style="color: white; padding-top: 20px;">Survival Rate Calculator</h1>
+
+
+<div class="container modaly" style="background: rgba(89, 107, 158, 0.2);">
+    <div *ngIf="visible==true && estado==1" class="text-center mb-4 redondear"
+        style="background: rgba(243, 83, 83, 0.14); padding: 20px; color: rgb(243, 83, 83);">
+        <h4>Estas en riesgo</h4>
+        <p>Tiene una probabilidad alta de morir por covid-19 si está infectado.</p>
+
+        <p>Tenga en cuenta que esto es solo una estimación, y no una evaluación absoluta de los efectos que covid-19
+            podría tener en usted.</p>
+    </div>
+    <div *ngIf="visible==true && estado==0" class="text-center mb-4 redondear"
+        style="background: rgba(14, 233, 203, 0.14); padding:20px;color: rgb(14, 233, 203);">
+        <h4>Deberías estar bien</h4>
+        <p>Tiene una probabilidad baja de morir por covid-19 si está infectado.</p>
+
+        <p> Tenga en cuenta que esto es solo una estimación, y no una evaluación absoluta de los efectos que covid-19
+            podría tener en usted.</p>
+    </div>
+    <form name="form" #f="ngForm" (ngSubmit)="createForm()" novalidate class="home-form">
+        <!-- Age Group-->
+        <div class="form-group">
+            <h5 class="titulo font-weight-bold">Age group</h5>
+            <div class="row row-cols-5">
+                <div *ngFor="let item of ages; let i=index;" class="col items text-center" (click)="setRow(i)"
+                    [ngClass]="{selected : selectedIndex == i}">{{item.value}}</div>
+            </div>
+        </div>
+        <!-- Sex -->
+        <div class="form-group">
+            <h5 class="titulo font-weight-bold">Sex</h5>
+            <div class="row row-cols-2">
+                <div class="col items text-center" *ngFor="let item of sex; let i = index;" (click)="setSex(i)"
+                    [ngClass]="{selected : selectedSex== i}">{{item.value}}</div>
+            </div>
+        </div>
+        <!-- conditions -->
+        <div class="form-group">
+            <h5 class="titulo font-weight-bold">Do you have any of these conditions?</h5>
+            <div *ngFor="let item of conditions; let i =index;">
+                <div *ngIf=item.value2 class="btn btn-success" (click)="haveConditions(i)">
+                    <label>{{item.option}}</label>
+                </div>
+                <div *ngIf=!item.value2 class="btn btn-danger" (click)="haveConditions(i)">
+                    <label>{{item.option}}</label></div>
+                <label class="opcion"> {{item.name}}</label>
+                <div class="espacio1"></div>
+            </div>
+        </div>
+        <!-- Boton Enviar-->
+        <button type="submit" class="btn btn-primary btn-block">
+            <span>Enviar</span>
+        </button>
+    </form>
+
+</div>

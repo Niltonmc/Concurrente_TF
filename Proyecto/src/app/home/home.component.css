@@ -1,0 +1,65 @@
+.modaly{
+    max-width: 650px;
+    padding-top: 15px;
+    margin-top: 45px;
+    border-radius: 33px 33px 33px 33px;
+    -moz-border-radius: 33px 33px 33px 33px;
+    -webkit-border-radius: 33px 33px 33px 33px;
+    border: 0px solid #000000;
+    padding-bottom: 20px;
+}
+
+.titulo{
+    padding-top: 50px;
+    padding-bottom: 25px;
+    color: white;
+}
+
+.items{
+    color: white;
+    margin-left: 5px;
+    margin-right: 5px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    background-color: #445175;
+    border-radius: 33px 33px 33px 33px;
+    -moz-border-radius: 33px 33px 33px 33px;
+    -webkit-border-radius: 33px 33px 33px 33px;
+    border: 0px solid #000000;
+}
+
+.espacio{
+    padding-top: 10px;
+    padding-bottom: 20px;
+}
+
+.espacio1{
+    padding-bottom: 8px;
+}
+
+.opcion{
+    padding-left: 10px;
+    color: white;
+}
+
+.blanco{
+    color: rgb(197, 202, 219);
+}
+.mensaje{
+    padding-top: 10px;
+    border-radius: 33px 33px 33px 33px;
+    -moz-border-radius: 33px 33px 33px 33px;
+    -webkit-border-radius: 33px 33px 33px 33px;
+    border: 0px solid #000000;
+}
+
+.selected{
+    background-color: rgb(27, 216, 58);
+}
+
+.redondear{
+    border-radius: 33px 33px 33px 33px;
+    -moz-border-radius: 33px 33px 33px 33px;
+    -webkit-border-radius: 33px 33px 33px 33px;
+    border: 0px solid #000000;
+}
